@@ -110,8 +110,3 @@ npm test                     # node --test，跑 tests/*.test.mjs
 - `X402WRITE_BASE_URL` —— 必须是**公网**地址，不能是 `localhost`。
 - `X402_ARTICLE_PATH_PREFIX` —— Solana 报告走 `/api/v1/sol/articles`，Base 走 `/api/v1/articles`，需与目标服务一致。
 
----
-
-## 6. 更详细的架构说明
-
-面向后续开发者的深入文档见 [`CLAUDE.md`](./CLAUDE.md)，包含两条 Cobo 支付路径、目录搜索与阅读路径的一致性约束、计划文档与实现的已知差异等。

@@ -27,8 +27,11 @@ export async function putObject(
 ): Promise<void> {
   if (usingBlob()) {
     const { put } = await import("@vercel/blob");
+    // Paid report content (and the history/activity manifests that enumerate
+    // it) must NOT be world-readable. Store as private blobs; reads go through
+    // get() with the read-write token, served only via our route handlers.
     await put(key, body, {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType,
@@ -44,12 +47,11 @@ export async function putObject(
 /** Returns the object bytes, or null when the key does not exist. */
 export async function getObject(key: string): Promise<Buffer | null> {
   if (usingBlob()) {
-    const { head } = await import("@vercel/blob");
+    const { get } = await import("@vercel/blob");
     try {
-      const meta = await head(key);
-      const response = await fetch(meta.url, { cache: "no-store" });
-      if (!response.ok) return null;
-      return Buffer.from(await response.arrayBuffer());
+      const result = await get(key, { access: "private", useCache: false });
+      if (!result) return null;
+      return Buffer.from(await new Response(result.stream).arrayBuffer());
     } catch {
       return null;
     }
