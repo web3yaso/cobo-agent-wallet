@@ -150,8 +150,12 @@ export default function Home() {
     paymentStatus: "idle",
   });
 
+  const paymentsDisabled = pairing?.pactStatus === "disabled";
   const canSend = useMemo(
-    () => input.trim().length > 0 && !isLoading && pairing?.paired === true,
+    () =>
+      input.trim().length > 0 &&
+      !isLoading &&
+      (pairing?.paired === true || pairing?.pactStatus === "disabled"),
     [input, isLoading, pairing],
   );
   const buttonLabel = isLoading ? stageLabels[currentStage] : "Read";
@@ -366,7 +370,13 @@ export default function Home() {
           <div className="pairing-head">
             <div>
               <h2>Pairing</h2>
-              <p>{pairing?.paired ? "Wallet and pact confirmed" : "Wallet and pact required"}</p>
+              <p>
+                {paymentsDisabled
+                  ? "Payments disabled — paid reports unavailable"
+                  : pairing?.paired
+                    ? "Wallet and pact confirmed"
+                    : "Wallet and pact required"}
+              </p>
             </div>
             <span className={`badge ${pairing?.paired ? "ok" : "warn"}`}>
               {pairingState === "checking" ? "checking" : pairing?.pactStatus || "unknown"}

@@ -11,6 +11,13 @@ export const COBO_PACT_ID = process.env.COBO_PACT_ID;
 
 export const CAW_BIN = process.env.CAW_BIN || "caw";
 
+// Payments require the `caw` CLI, which cannot run on serverless hosts (e.g.
+// Vercel). Set PAYMENTS_ENABLED=false there to disable the payment path
+// gracefully: free reads still work, paid reads return a clear message, and the
+// pairing status endpoint reports "disabled" instead of shelling out to caw.
+export const PAYMENTS_ENABLED =
+  (process.env.PAYMENTS_ENABLED ?? "true").toLowerCase() !== "false";
+
 export const MAX_REPORT_USDC = Number(process.env.MAX_REPORT_USDC || "0.50");
 
 export const DAILY_BUDGET_USDC = Number(process.env.DAILY_BUDGET_USDC || "5.00");

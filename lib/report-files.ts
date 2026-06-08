@@ -1,9 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { recordReportHistory } from "./report-history";
+import { putObject } from "./storage";
 import type { PaidReport } from "./types";
-
-const DOWNLOAD_ROOT = "downloads";
 
 function safeSegment(value: string): string {
   return value.replace(/[^a-z0-9-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
@@ -15,15 +12,19 @@ export async function saveReportFiles(report: PaidReport): Promise<{
   citationPath: string;
 }> {
   const slug = safeSegment(report.slug);
-  const dir = join(process.cwd(), DOWNLOAD_ROOT, slug);
-  const contentPath = join(dir, "content.md");
-  const companionPath = join(dir, "companion.md");
-  const citationPath = join(dir, "citation.json");
+  const contentPath = `${slug}/content.md`;
+  const companionPath = `${slug}/companion.md`;
+  const citationPath = `${slug}/citation.json`;
 
-  await mkdir(dir, { recursive: true });
-  await writeFile(contentPath, report.content, "utf8");
-  await writeFile(companionPath, report.companion, "utf8");
-  await writeFile(citationPath, JSON.stringify(report.citation, null, 2), "utf8");
+  await Promise.all([
+    putObject(contentPath, report.content, "text/markdown; charset=utf-8"),
+    putObject(companionPath, report.companion, "text/markdown; charset=utf-8"),
+    putObject(
+      citationPath,
+      JSON.stringify(report.citation, null, 2),
+      "application/json; charset=utf-8",
+    ),
+  ]);
 
   const paths = {
     contentPath,

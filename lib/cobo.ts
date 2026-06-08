@@ -8,6 +8,7 @@ import {
   DAILY_PAYMENT_LIMIT,
   MAX_REPORT_BASE_UNITS,
   MAX_REPORT_USDC,
+  PAYMENTS_ENABLED,
   X402_NETWORK,
   requireEnv,
 } from "./config";
@@ -75,6 +76,15 @@ function configuredPairingBase(): CoboPairingStatus {
 
 export async function getCoboPairingStatus(): Promise<CoboPairingStatus> {
   const base = configuredPairingBase();
+  if (!PAYMENTS_ENABLED) {
+    return {
+      ...base,
+      pactStatus: "disabled",
+      error:
+        "Payments are disabled on this deployment (PAYMENTS_ENABLED=false). " +
+        "The caw CLI cannot run on serverless hosts; paid reads are unavailable.",
+    };
+  }
   if (base.missing.length > 0 || !base.pactId) {
     return base;
   }
@@ -164,6 +174,11 @@ export async function payX402Requirement(requirement: PaymentRequirement): Promi
 }
 
 export async function cawFetchX402(readUrl: string, requirement: PaymentRequirement): Promise<string> {
+  if (!PAYMENTS_ENABLED) {
+    throw new Error(
+      "本部署未开启付费（PAYMENTS_ENABLED=false），付费报告暂不可用；免费内容仍可阅读。",
+    );
+  }
   if (!COBO_PACT_ID) {
     throw new Error(
       "Missing COBO_PACT_ID. Create and approve a Cobo pact for Citely Reader, then add COBO_PACT_ID to .env.local.",
