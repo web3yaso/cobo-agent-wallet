@@ -22,6 +22,7 @@ type ChatMessage = {
   content: string;
   candidates?: ReportCandidate[];
   query?: string;
+  reportSlug?: string;
 };
 
 type ReportCandidate = {
@@ -100,8 +101,13 @@ type PairingStatus = {
   error?: string;
 };
 
-const starter =
-  "帮我读一下关于 Web3 公司劳动/雇佣风险的报告，并给出术语表和常见误区。";
+const starter = "为 web3 公司工作,有什么风险?";
+
+const REPORT_FILES = ["content.md", "companion.md", "citation.json"] as const;
+
+function downloadHref(slug: string, file: string) {
+  return `/api/downloads/${encodeURIComponent(slug)}/${encodeURIComponent(file)}`;
+}
 
 const stageLabels: Record<AgentStage, string> = {
   idle: "Ready",
@@ -124,7 +130,7 @@ export default function Home() {
       id: "welcome",
       role: "assistant",
       content:
-        "我是 Citely Reader。给我一个 x402write 报告 slug、URL，或直接描述你想了解的 Web3 风险问题。",
+        "我是 Citely Reader。你可以直接问：为 web3 公司工作,有什么风险?",
     },
   ]);
   const [input, setInput] = useState(starter);
@@ -154,10 +160,18 @@ export default function Home() {
     setPairingState("checking");
     try {
       const response = await fetch("/api/pacts/status", { cache: "no-store" });
-      const payload = (await response.json()) as PairingStatus & {
+      const text = await response.text();
+      let payload: PairingStatus & {
         dailyBudgetUsd?: string;
         maxReportUsd?: string;
       };
+      try {
+        payload = JSON.parse(text) as typeof payload;
+      } catch {
+        throw new Error(
+          "Pairing endpoint returned a non-JSON page. Confirm you opened Citely Reader, not the x402 service, then refresh.",
+        );
+      }
       if (!response.ok) {
         throw new Error(payload.error || "Failed to check Cobo pairing.");
       }
@@ -302,6 +316,11 @@ export default function Home() {
       }
 
       setStatus(payload.status);
+      const savedSlug =
+        payload.status?.selectedReport &&
+        ["paid", "cached", "not_required"].includes(payload.status.paymentStatus || "")
+          ? payload.status.selectedReport
+          : undefined;
       setMessages((current) => [
         ...current,
         {
@@ -310,6 +329,7 @@ export default function Home() {
           content: payload.answer,
           candidates: payload.candidates,
           query: text,
+          reportSlug: savedSlug,
         },
       ]);
       refreshHistory();
@@ -538,6 +558,25 @@ export default function Home() {
                     ))}
                   </div>
                 ) : null}
+                {message.reportSlug ? (
+                  <div className="report-files">
+                    <span className="report-files-label">
+                      已保存到服务器 downloads/{message.reportSlug}/
+                    </span>
+                    <div className="report-files-links">
+                      {REPORT_FILES.map((file) => (
+                        <a
+                          key={file}
+                          className="report-file-link"
+                          href={downloadHref(message.reportSlug!, file)}
+                          download
+                        >
+                          {file}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>
@@ -548,7 +587,7 @@ export default function Home() {
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="输入 report slug、URL，或自然语言问题"
+              placeholder="为 web3 公司工作,有什么风险?"
               aria-label="Message"
             />
             <button type="submit" disabled={!canSend}>

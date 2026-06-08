@@ -408,6 +408,43 @@ textarea {
   font-size: 12px;
 }
 
+.report-files {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.report-files-label {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.report-files-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-file-link {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.report-file-link:hover {
+  border-color: #8ac5bd;
+  background: #f1faf8;
+  color: var(--accent-dark);
+}
+
 .composer-wrap {
   border-top: 1px solid var(--line);
   background: rgba(255, 254, 250, 0.92);
