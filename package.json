@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --import tsx --test tests/*.test.mjs"
+    "test": "node --import tsx --test tests/*.test.mjs",
+    "smoke": "node --import tsx --env-file-if-exists=.env.local scripts/smoke-e2e.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.24",
